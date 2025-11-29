@@ -102,11 +102,13 @@ Complete autonomous self-learning ecosystem for ALMQUIST RAG that learns from:
 - Generates 384D embeddings (paraphrase-multilingual-MiniLM-L12-v2)
 - Updates FAISS IndexFlatIP
 - Marks chunks as processed in crawler DB
+- **Auto-logs to CDB** (source → profession | types | scores)
 
 **Results:**
 - RAG expanded from 35 → 40 chunks
 - 5 chunks auto-added (LKCR: 4×, ČAK: 1×)
 - Threshold: 0.6 (balanced quality vs. coverage)
+- **CDB logging:** Full visibility into daily additions
 
 ### 3. Self-Learning Cycle
 
@@ -146,6 +148,12 @@ Complete autonomous self-learning ecosystem for ALMQUIST RAG that learns from:
 # Daily 5:00 AM - RAG Integration
 0 5 * * *  /home/puzik/almquist_rag_integration_cron.sh
 ```
+
+**CDB Logging:**
+- Every chunk added to RAG is automatically logged to Central Database
+- Format: `Source → Profession | chunk_type:count | avg_score:X.XX`
+- Example: `ČAK - Česká advokátní komora → advokat | deadline:1 | avg_score:0.60`
+- Provides full visibility into what content is being added daily
 
 ---
 
