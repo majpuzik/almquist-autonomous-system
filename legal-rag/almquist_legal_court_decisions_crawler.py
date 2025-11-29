@@ -28,14 +28,15 @@ class CourtDecisionsCrawler:
         print(f"   Max pages: {max_pages}")
 
         base_url = "https://sbirka.nsoud.cz"
+        archive_base = "https://sbirka.nsoud.cz/nove-vydana-rozhodnuti-ve-sbirce"
         decisions_found = []
 
-        # Start from homepage and paginate
+        # Use archive pagination (supports up to ~1,328 pages!)
         for page_num in range(1, max_pages + 1):
             if page_num == 1:
-                url = base_url
+                url = archive_base + "/"
             else:
-                url = f"{base_url}/page/{page_num}/"
+                url = f"{archive_base}/strana/{page_num}/"
 
             print(f"\n   Page {page_num}: {url}")
 

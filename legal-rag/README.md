@@ -10,9 +10,9 @@
 
 Specializovaný RAG systém pro české právní prostředí obsahující:
 - **24 českých zákonů** (občanské, trestní, správní, daňové, ...)
-- **14 rozsudků soudů** (Nejvyšší soud, Ústavní soud, NSS)
+- **33 rozsudků soudů** (29 z Nejvyššího soudu, 2 z Ústavního soudu, 2 z NSS)
 - **Automatické updaty** nových zákonů a rozsudků
-- **1,815 chunks** v RAG systému
+- **2,159 chunks** v RAG systému (1,648 zákonů + 511 rozsudků)
 
 ---
 
@@ -62,13 +62,13 @@ Specializovaný RAG systém pro české právní prostředí obsahující:
 - Autorský zákon (121/2000)
 - Zákon o ochranných známkách (441/2003)
 
-### Rozsudky (14 celkem)
+### Rozsudky (33 celkem)
 
-**Nejvyšší soud (10)**
-- 33 Cdo 2889/2023, 29 ICdo 107/2021, 30 Cdo 1101/2024
-- 29 ICdo 72/2024, 24 Cdo 2633/2024, 23 Cdo 1369/2024
-- 23 Cdo 55/2024, 24 Cdo 3295/2023, 33 Cdo 2528/2023
-- 33 Cdo 1788/2023
+**Nejvyšší soud (29)**
+- **Občanské věci**: 33 Cdo 2889/2023, 30 Cdo 1101/2024, 24 Cdo 2633/2024, 23 Cdo 1369/2024, 23 Cdo 55/2024, 24 Cdo 3295/2023, 33 Cdo 2528/2023, 33 Cdo 1788/2023, 24 Cdo 1297/2024, 25 Cdo 240/2023
+- **Obchodní věci**: 29 ICdo 107/2021, 29 ICdo 72/2024, 29 ICdo 157/2023
+- **Trestní věci**: 4 Tdo 970/2024
+- **Další rozhodnutí**: 15 dalších rozsudků a usnesení z let 2021-2024
 
 **Ústavní soud (2)**
 - Pl. ÚS 1/24 (nález)
@@ -83,15 +83,17 @@ Specializovaný RAG systém pro české právní prostředí obsahující:
 ## 🎯 RAG Statistiky
 
 ```
-Total chunks:              1,815
-  ├─ Zákony:              ~1,650 chunks (24 zákonů)
-  └─ Rozsudky:            ~165 chunks (14 rozhodnutí)
+Total chunks:              2,159
+  ├─ Zákony:              1,648 chunks (24 zákonů)
+  └─ Rozsudky:              511 chunks (33 rozhodnutí)
 
-Embeddings:                1,815 × 384D
+Embeddings:                2,159 × 384D (3.2 MB)
 Model:                     paraphrase-multilingual-MiniLM-L12-v2
 Index type:                FAISS IndexFlatIP
 Storage:                   /home/puzik/almquist_legal_rag/
 Database:                  /home/puzik/almquist_legal_sources.db
+
+Test Quality:              Average score 0.611 (42/42 queries successful)
 ```
 
 ### Databázová Struktura
@@ -249,21 +251,37 @@ rag.test_search("pracovní smlouva", top_k=5)
 
 ## 🧪 Test Results
 
-### Query: "dědictví"
-- **Top Result:** Občanský zákoník - správa pozůstalosti
-- **Score:** 0.500
+**Comprehensive Test Suite:** 42 queries across 7 legal categories
 
-### Query: "trestný čin krádeže"
-- **Top Result:** Trestní zákoník § 13, § 14
-- **Score:** 0.690
+### Overall Performance
+- **Success Rate:** 100% (42/42 queries)
+- **Average Score:** 0.611
+- **Score Range:** 0.300 - 0.796
 
-### Query: "pracovní smlouva"
-- **Top Result:** Zákoník práce § 21, § 34
-- **Score:** 0.750
+### Sample Query Results
 
-### Query: "stavební povolení"
-- **Top Result:** Správní řád
-- **Score:** ~0.65
+#### Občanské právo
+- **"dědictví"** → 24 Cdo 3295/2023 (score: 0.500)
+- **"kupní smlouva"** → 33 Cdo 2889/2023 (score: 0.667)
+- **"rozvod manželství"** → Zákon o rodině (score: 0.701)
+
+#### Trestní právo
+- **"trestný čin krádeže"** → Zákon o přestupcích (score: 0.706)
+- **"podmíněný trest"** → Trestní zákoník (score: 0.777)
+- **"trestní odpovědnost"** → Trestní řád (score: 0.752)
+
+#### Pracovní právo
+- **"pracovní smlouva"** → Zákoník práce (score: 0.750+)
+- **"výpověď"** → Zákoník práce (score: 0.764+)
+
+#### Daňové právo
+- **"daň z příjmů"** → Zákon o daních z příjmů (score: 0.730+)
+- **"DPH"** → Zákon o DPH (score: 0.796)
+
+### Test Suite Location
+```bash
+python3 /home/puzik/almquist_legal_rag_test_suite.py
+```
 
 ---
 
@@ -397,4 +415,4 @@ Part of ALMQUIST RAG Self-Learning Ecosystem.
 
 **🚀 PRODUCTION READY - Autonomous Legal RAG running 24/7**
 
-**24 zákonů | 14 rozsudků | 1,815 chunks | Auto-updates daily**
+**24 zákonů | 33 rozsudků | 2,159 chunks | Auto-updates daily | Test score: 0.611 avg**

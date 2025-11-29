@@ -506,10 +506,8 @@ class LegalRAGIntegration:
         print(f"Total embeddings:      {self.index.ntotal}")
         print("=" * 70)
 
-    def test_search(self, query, top_k=3):
-        """Test RAG search"""
-        print(f"\n🔍 Testing search: '{query}'")
-
+    def search(self, query, top_k=3):
+        """Search RAG and return results (no printing)"""
         # Generate query embedding
         query_embedding = self.model.encode(
             [query],
@@ -523,15 +521,34 @@ class LegalRAGIntegration:
             top_k
         )
 
+        # Build results
+        results = []
+        for idx, dist in zip(indices[0], distances[0]):
+            if idx >= 0 and idx < len(self.metadata):
+                results.append({
+                    'score': float(dist),
+                    'metadata': self.metadata[idx],
+                    'text': self.chunks[idx]
+                })
+
+        return results
+
+    def test_search(self, query, top_k=3):
+        """Test RAG search with printing"""
+        print(f"\n🔍 Testing search: '{query}'")
+
+        results = self.search(query, top_k=top_k)
+
         # Print results
         print(f"\nTop {top_k} results:")
-        for i, (idx, dist) in enumerate(zip(indices[0], distances[0]), 1):
-            if idx >= 0 and idx < len(self.metadata):
-                meta = self.metadata[idx]
-                chunk_text = self.chunks[idx][:200]
-                print(f"\n{i}. [{meta.get('law_name', 'Unknown')} {meta.get('section', '')}]")
-                print(f"   Score: {dist:.3f}")
-                print(f"   Text: {chunk_text}...")
+        for i, result in enumerate(results, 1):
+            meta = result['metadata']
+            chunk_text = result['text'][:200]
+            print(f"\n{i}. [{meta.get('law_name', 'Unknown')} {meta.get('section', '')}]")
+            print(f"   Score: {result['score']:.3f}")
+            print(f"   Text: {chunk_text}...")
+
+        return results
 
 
 def main():
