@@ -12,6 +12,7 @@ from sentence_transformers import SentenceTransformer
 from pathlib import Path
 from datetime import datetime
 import pickle
+import subprocess
 
 class CrawlerRAGIntegration:
     """Integrace crawler chunks do RAG"""
@@ -90,11 +91,12 @@ class CrawlerRAGIntegration:
         """Přidat chunks do RAG systému"""
         if not chunks:
             print("⚠️  No chunks to add")
-            return 0
+            return 0, []
 
         print(f"\n📊 Adding {len(chunks)} chunks to RAG...")
 
         added_count = 0
+        added_chunks = []
 
         for chunk in chunks:
             try:
@@ -134,6 +136,7 @@ class CrawlerRAGIntegration:
                 self._mark_as_processed(chunk['id'], chunk_id)
 
                 added_count += 1
+                added_chunks.append(chunk)
 
                 print(f"   ✓ [{chunk['chunk_type']}] {chunk.get('source_title', 'Unknown')[:40]} (score: {chunk['relevance_score']:.2f})")
 
@@ -141,7 +144,7 @@ class CrawlerRAGIntegration:
                 print(f"   ✗ Error adding chunk {chunk['id']}: {e}")
                 continue
 
-        return added_count
+        return added_count, added_chunks
 
     def _extract_profession(self, profession_relevance_json):
         """Extrahovat profession z JSON"""
@@ -171,6 +174,47 @@ class CrawlerRAGIntegration:
 
         conn.commit()
         conn.close()
+
+    def log_to_cdb(self, chunks_added):
+        """Logovat přidané chunks do CDB"""
+        if not chunks_added:
+            return
+
+        # Seskupit podle zdroje a typu
+        by_source_type = {}
+        for chunk in chunks_added:
+            source = chunk.get('source_title', 'Unknown')
+            chunk_type = chunk.get('chunk_type', 'unknown')
+            profession = self._extract_profession(chunk.get('profession_relevance'))
+            score = chunk.get('relevance_score', 0.0)
+
+            key = (source, profession)
+            if key not in by_source_type:
+                by_source_type[key] = {'types': {}, 'scores': []}
+
+            by_source_type[key]['types'][chunk_type] = by_source_type[key]['types'].get(chunk_type, 0) + 1
+            by_source_type[key]['scores'].append(score)
+
+        # Sestavit metadata string
+        metadata_parts = []
+        for (source, profession), data in by_source_type.items():
+            types_str = ', '.join([f"{t}:{c}" for t, c in data['types'].items()])
+            avg_score = sum(data['scores']) / len(data['scores'])
+            metadata_parts.append(f"{source} → {profession} | {types_str} | avg_score:{avg_score:.2f}")
+
+        metadata = f"RAG auto-update | Added {len(chunks_added)} chunks | " + " | ".join(metadata_parts)
+
+        # Volat maj-almquist-log
+        try:
+            subprocess.run([
+                '/home/puzik/almquist-central-log/maj-almquist-log',
+                'event', 'improvement', 'almquist', f'rag-auto-add-{datetime.now().strftime("%Y%m%d")}',
+                '--status', 'completed',
+                '--metadata', metadata
+            ], check=True, capture_output=True, text=True)
+            print(f"   ✓ Logged to CDB")
+        except Exception as e:
+            print(f"   ⚠️  CDB log failed: {e}")
 
     def save_rag_system(self):
         """Uložit aktualizovaný RAG systém"""
@@ -237,12 +281,16 @@ class CrawlerRAGIntegration:
 
         # Add to RAG
         print(f"\n2️⃣ Adding chunks to RAG system...")
-        added_count = self.add_chunks_to_rag(chunks)
+        added_count, added_chunks = self.add_chunks_to_rag(chunks)
 
         # Save
         if added_count > 0:
             print(f"\n3️⃣ Saving updated RAG system...")
             self.save_rag_system()
+
+            # Log to CDB
+            print(f"\n4️⃣ Logging to CDB...")
+            self.log_to_cdb(added_chunks)
 
         # Summary
         print("\n" + "="*70)
