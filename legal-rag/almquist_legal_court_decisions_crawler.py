@@ -11,6 +11,11 @@ import time
 from datetime import datetime
 import json
 import re
+import shutil
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
+from almquist_resource_monitor import ResourceMonitor
 
 class CourtDecisionsCrawler:
     """Crawler for Czech court decisions"""
@@ -21,6 +26,13 @@ class CourtDecisionsCrawler:
         self.session.headers.update({
             'User-Agent': 'ALMQUIST Legal RAG Bot/1.0 (Educational Purpose)'
         })
+        self.pause_between_requests = 30  # 30 seconds between requests
+        self.resource_monitor = ResourceMonitor(
+            cpu_limit=80,
+            disk_limit=90,
+            mem_limit=85,
+            gpu_limit=80
+        )
 
     def crawl_nsoud_listing(self, max_pages=5):
         """Crawl listing of decisions from Nejvyšší soud"""
@@ -102,7 +114,15 @@ class CourtDecisionsCrawler:
                 print(f"      Found {len(page_decisions)} decisions")
                 decisions_found.extend(page_decisions)
 
-                time.sleep(2)  # Be nice to server
+                # Check resources (CPU, GPU, Disk, Memory)
+                if not self.resource_monitor.check_all(verbose=False):
+                    print(f"   ⚠️  Stopping crawl due to resource limits")
+                    break
+
+                # Be nice to server - 30 second pause
+                if page_num < max_pages:
+                    print(f"      ⏸️  Pausing 30 seconds...")
+                    time.sleep(self.pause_between_requests)
 
             except Exception as e:
                 print(f"      ✗ Error on page {page_num}: {e}")
@@ -283,7 +303,14 @@ class CourtDecisionsCrawler:
             else:
                 failed_count += 1
 
-            time.sleep(2)  # Be nice to server
+            # Check resources every 10 decisions
+            if i % 10 == 0 and not self.resource_monitor.check_all(verbose=False):
+                print(f"\n⚠️  Stopping detail crawl due to resource limits")
+                break
+
+            # Be nice to server - 30 second pause between detail requests
+            if i < len(decisions):
+                time.sleep(self.pause_between_requests)
 
         # Log crawl
         self.log_crawl('nsoud_sbirka', 'court_decision', 'success', len(decisions), success_count)
@@ -359,11 +386,24 @@ def main():
     """Main function"""
     crawler = CourtDecisionsCrawler()
 
-    # Crawl Nejvyšší soud - more pages and decisions
-    crawler.crawl_nsoud_decisions(max_pages=10, max_details=50)
+    # Show initial resource status
+    print(f"\n{'='*70}")
+    print(f"⚖️  NEJVYŠŠÍ SOUD - COMPLETE ARCHIVE CRAWLER")
+    print(f"{'='*70}")
+    crawler.resource_monitor.print_status()
 
-    # Show stats
+    # Crawl Nejvyšší soud - COMPLETE ARCHIVE CRAWL
+    # Archive has ~1,328 pages - crawl ALL with resource monitoring
+    # Will auto-stop if resources reach limits (CPU 80%, Disk 90%, Mem 85%, GPU 80%)
+    print(f"\n🎯 TARGET: Complete NS archive (~1,328 pages)")
+    print(f"⏸️  Pause between requests: {crawler.pause_between_requests} seconds")
+    print(f"📊 Resource limits: CPU 80%, Disk 90%, Memory 85%, GPU 80%")
+
+    crawler.crawl_nsoud_decisions(max_pages=1328, max_details=10000)
+
+    # Show final stats
     crawler.show_stats()
+    crawler.resource_monitor.print_status()
 
 
 if __name__ == "__main__":

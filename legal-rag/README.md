@@ -415,4 +415,14 @@ Part of ALMQUIST RAG Self-Learning Ecosystem.
 
 **🚀 PRODUCTION READY - Autonomous Legal RAG running 24/7**
 
-**24 zákonů | 33 rozsudků | 2,159 chunks | Auto-updates daily | Test score: 0.611 avg**
+**24 zákonů | 33 rozsudků | 2,159 chunks | Test score: 0.611 avg**
+
+**🔥 NEW: Complete Crawl System - ALL Czech Courts (~546,000+ decisions)**
+
+**Currently crawling:**
+- ✅ NS specialized collection (1,328 pages)
+- ✅ ALL courts via Justice.cz API (~546K decisions)
+- ⚙️ Parallel execution with resource monitoring
+- 🛡️ Auto-stop protection (CPU/GPU/Disk/Memory limits)
+
+See [COMPLETE_CRAWL_SYSTEM.md](COMPLETE_CRAWL_SYSTEM.md) for details.
