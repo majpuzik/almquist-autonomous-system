@@ -98,14 +98,15 @@ Complete autonomous self-learning ecosystem for ALMQUIST RAG that learns from:
 **Main Script:** `almquist_crawler_rag_integration.py` (350 lines)
 
 **Features:**
-- Auto-filters high-quality chunks (relevance ≥ 0.7)
+- Auto-filters high-quality chunks (relevance ≥ 0.6)
 - Generates 384D embeddings (paraphrase-multilingual-MiniLM-L12-v2)
 - Updates FAISS IndexFlatIP
 - Marks chunks as processed in crawler DB
 
 **Results:**
-- RAG expanded from 35 → 37 chunks
-- 2 high-quality chunks auto-added (LKCR, score 1.0)
+- RAG expanded from 35 → 40 chunks
+- 5 chunks auto-added (LKCR: 4×, ČAK: 1×)
+- Threshold: 0.6 (balanced quality vs. coverage)
 
 ### 3. Self-Learning Cycle
 
@@ -185,10 +186,11 @@ Response Times:     83-945ms
 ### RAG System
 
 ```
-Total chunks:        37 (35 manual + 2 crawler)
+Total chunks:        40 (35 manual + 5 crawler)
 Embedding dim:       384D
 Index type:          FAISS IndexFlatIP
 Model:               paraphrase-multilingual-MiniLM-L12-v2
+Auto-add threshold:  0.6 (high-quality chunks)
 ```
 
 ---
