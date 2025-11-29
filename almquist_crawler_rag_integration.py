@@ -210,7 +210,7 @@ class CrawlerRAGIntegration:
             }, f)
         print(f"   ✓ Pickle saved")
 
-    def run_integration(self, min_relevance=0.7):
+    def run_integration(self, min_relevance=0.6):
         """Spustit celý integration cycle"""
         print("\n" + "="*70)
         print("🔗 ALMQUIST CRAWLER → RAG INTEGRATION")
@@ -303,7 +303,7 @@ def main():
     print(f"   Current RAG total:          {stats['rag_total_chunks']}")
 
     # Run integration
-    integrator.run_integration(min_relevance=0.7)
+    integrator.run_integration(min_relevance=0.6)
 
     # Show stats after
     print("\n📊 Updated Stats:")
